@@ -21,6 +21,10 @@ app.use('/*', (req, res, next) => {
     next();
 });
 
+app.get("/", (req, res) => {
+    res.send({ "message": "api is running" })
+})
+
 app.listen(port, () => {
-    console.log(`auth service loaded, ${port}`)
+    console.log(`tracker service loaded, ${port}`)
 })
