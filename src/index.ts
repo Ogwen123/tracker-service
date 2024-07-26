@@ -8,7 +8,7 @@ BigInt.prototype.toJSON = function () { return this.toString() }
 dotenv.config()
 
 const app = express()
-const port = 3003
+const port = 3004
 
 //app.use(express.json())
 app.use(bodyParser.json())
