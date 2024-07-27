@@ -1,70 +1,85 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("POSTGRES_URL")
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
 }
 
 model users {
-    id            String     @id(map: "users_pk") @db.VarChar
-    username      String?    @db.VarChar
-    name          String?    @db.VarChar
-    email         String?    @db.VarChar
-    password_hash String?    @db.VarChar
-    perm_flag     Int?
-    created_at    String?    @db.VarChar
-    updated_at    String?    @db.VarChar
-    services_flag Int        @default(0)
-    logins        logins[]
-    services      services[]
-    tables        tables[]
+  id            String     @id(map: "users_pk") @db.VarChar
+  username      String?    @db.VarChar
+  name          String?    @db.VarChar
+  email         String?    @db.VarChar
+  password_hash String?    @db.VarChar
+  perm_flag     Int?
+  created_at    String?    @db.VarChar
+  updated_at    String?    @db.VarChar
+  services_flag Int        @default(0)
+  logins        logins[]
+  services      services[]
+  tables        tables[]
+  tasks         tasks[]
 }
 
 model blacklisted_tokens {
-    token            String  @id(map: "blacklisted_tokens_pk") @db.VarChar
-    logout_timestamp BigInt?
+  token            String  @id(map: "blacklisted_tokens_pk") @db.VarChar
+  logout_timestamp BigInt?
 }
 
 model table_contents {
-    id       String  @id(map: "table_contents_pk") @db.VarChar
-    table_id String? @db.VarChar
-    location String? @db.VarChar
-    content  String? @db.VarChar
-    tables   tables? @relation(fields: [table_id], references: [id], onDelete: Cascade, map: "table_contents_tables_columns_fk")
+  id       String  @id(map: "table_contents_pk") @db.VarChar
+  table_id String? @db.VarChar
+  location String? @db.VarChar
+  content  String? @db.VarChar
+  tables   tables? @relation(fields: [table_id], references: [id], onDelete: Cascade, map: "table_contents_tables_columns_fk")
 }
 
 model tables {
-    id             String           @id(map: "id") @db.VarChar
-    user_id        String?          @db.VarChar
-    name           String?          @db.VarChar
-    type           String?          @db.VarChar
-    rows           Int?
-    columns        Int?
-    created_at     String?          @db.VarChar
-    table_contents table_contents[]
-    users          users?           @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "tables_users_username_fk")
+  id             String           @id(map: "id") @db.VarChar
+  user_id        String?          @db.VarChar
+  name           String?          @db.VarChar
+  type           String?          @db.VarChar
+  rows           Int?
+  columns        Int?
+  created_at     String?          @db.VarChar
+  table_contents table_contents[]
+  users          users?           @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "tables_users_username_fk")
 }
 
 model services {
-    id         String   @id(map: "services_pk") @db.VarChar
-    name       String?  @db.VarChar
-    alias      String?  @db.VarChar
-    enabled    Boolean?
-    type       String?  @db.VarChar
-    toggleable Boolean?
-    updated_by String?  @db.VarChar
-    updated_at String?  @db.VarChar
-    users      users?   @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "updated_by_fk")
+  id         String   @id(map: "services_pk") @db.VarChar
+  name       String?  @db.VarChar
+  alias      String?  @db.VarChar
+  enabled    Boolean?
+  type       String?  @db.VarChar
+  toggleable Boolean?
+  updated_by String?  @db.VarChar
+  updated_at String?  @db.VarChar
+  users      users?   @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "updated_by_fk")
 }
 
 model logins {
-    user_id    String? @db.VarChar
-    created_at String  @db.VarChar
-    generator  String  @db.VarChar
-    id         String  @id(map: "logins_pk") @db.VarChar
-    success    Boolean
-    reason     String? @db.VarChar
-    users      users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "logins_fk")
+  user_id    String? @db.VarChar
+  created_at String  @db.VarChar
+  generator  String  @db.VarChar
+  id         String  @id(map: "logins_pk") @db.VarChar
+  success    Boolean
+  reason     String? @db.VarChar
+  users      users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "logins_fk")
+}
+
+model tasks {
+  id                    String   @id(map: "tasks_pk") @db.VarChar
+  name                  String   @db.VarChar
+  repeat_period         String   @db.VarChar
+  date_time             Boolean?
+  day                   String?  @db.VarChar
+  hour                  Int?
+  minute                Int?
+  week_of_repeat_period Int?
+  user_id               String?  @db.VarChar
+  created_at            String?  @db.VarChar
+  users                 users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tasks_users_id_fk")
 }

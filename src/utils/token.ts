@@ -8,7 +8,6 @@ export const verifyToken = async (token: string): Promise<VerifyResponse | false
     } else {
         url = "http://auth-service:3000/api/"
     }
-    console.log(token)
 
     const res = await fetch(url + "verify-token", {
         method: "POST",
@@ -16,7 +15,7 @@ export const verifyToken = async (token: string): Promise<VerifyResponse | false
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token
         },
-        body: JSON.stringify({ service: "TABLE" })
+        body: JSON.stringify({ service: "TRACKER" })
     })
 
     if (!res.ok) {

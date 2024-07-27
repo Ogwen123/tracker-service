@@ -2,6 +2,8 @@ import express from "express"
 import dotenv from "dotenv"
 import bodyParser from "body-parser"
 
+import newTask from "./routes/task/new"
+
 //@ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
 
@@ -23,6 +25,10 @@ app.use('/*', (req, res, next) => {
 
 app.get("/", (req, res) => {
     res.send({ "message": "api is running" })
+})
+
+app.post("/api/task/new", (req, res) => {
+    newTask(req, res)
 })
 
 app.listen(port, () => {

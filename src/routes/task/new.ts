@@ -1,7 +1,7 @@
 import Joi from "joi"
 import express from "express"
-import { validate } from "../../utils/utils"
-import { error } from "../../utils/api"
+import { iso, validate } from "../../utils/utils"
+import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
@@ -49,10 +49,29 @@ export default async (req: express.Request, res: express.Response) => {
     let unique = false
     while (!unique) {
         id = uuidv4()
-        unique = (await prisma.tables.findMany({
+        unique = (await prisma.tasks.findMany({
             where: {
                 id
             }
         })).length === 0
     }
+
+    await prisma.tasks.create({
+        data: {
+            id: id,
+            user_id: validToken.id,
+            name: data.name,
+            repeat_period: data.repeatPeriod,
+            date_time: data.dt,
+            day: data.day || null,
+            hour: data.hour || null,
+            minute: data.minute || null,
+            week_of_repeat_period: data.weekOfRepeatPeriod || null,
+            created_at: iso()
+        }
+    }).catch(() => {
+        error(res, 400, "An error occured while creating the task.")
+    })
+
+    success(res, null, "Successfully created task.", 200)
 }
