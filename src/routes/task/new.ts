@@ -14,7 +14,7 @@ const SCHEMA = Joi.object({
     day: Joi.string().allow("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"),
     hour: Joi.number(),
     minute: Joi.number(),
-    weekOfRepeatPeriod: Joi.string().allow("FIRST", "SECOND", "THIRD", "FOURTH")
+    week: Joi.string().allow("FIRST", "SECOND", "THIRD", "FOURTH")
 })
 
 export default async (req: express.Request, res: express.Response) => {
