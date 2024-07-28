@@ -3,6 +3,7 @@ import dotenv from "dotenv"
 import bodyParser from "body-parser"
 
 import newTask from "./routes/task/new"
+import tasksIndex from "./routes/tasks/index"
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -29,6 +30,10 @@ app.get("/", (req, res) => {
 
 app.post("/api/task/new", (req, res) => {
     newTask(req, res)
+})
+
+app.post("/api/tasks", (req, res) => {
+    tasksIndex(req, res)
 })
 
 app.listen(port, () => {
