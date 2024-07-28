@@ -56,6 +56,8 @@ export default async (req: express.Request, res: express.Response) => {
         })).length === 0
     }
 
+    console.log(data.minute)
+
     await prisma.tasks.create({
         data: {
             id: id,
@@ -64,12 +66,13 @@ export default async (req: express.Request, res: express.Response) => {
             repeat_period: data.repeatPeriod,
             date_time: data.dt,
             day: data.day || null,
-            hour: data.hour || null,
-            minute: data.minute || null,
-            week_of_repeat_period: data.weekOfRepeatPeriod || null,
+            hour: data.hour !== undefined ? data.hour : null,
+            minute: data.minute !== undefined ? data.minute : null,
+            week_of_repeat_period: data.week || null,
             created_at: iso()
         }
-    }).catch(() => {
+    }).catch((e) => {
+        console.log(e)
         error(res, 400, "An error occured while creating the task.")
     })
 

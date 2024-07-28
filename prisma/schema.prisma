@@ -78,7 +78,7 @@ model tasks {
   day                   String?  @db.VarChar
   hour                  Int?
   minute                Int?
-  week_of_repeat_period Int?
+  week_of_repeat_period String?  @db.VarChar
   user_id               String?  @db.VarChar
   created_at            String?  @db.VarChar
   users                 users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tasks_users_id_fk")
