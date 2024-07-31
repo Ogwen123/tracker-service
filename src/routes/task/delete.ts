@@ -1,14 +1,15 @@
 import Joi from "joi"
 import express from "express"
-import config from "../../config.json"
 import { iso, validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
+import config from "../../config.json"
 
 const SCHEMA = Joi.object({
-    page: Joi.number().required().min(0)
+    id: Joi.string().required(),
+    page: Joi.number().required()
 })
 
 export default async (req: express.Request, res: express.Response) => {
@@ -38,23 +39,35 @@ export default async (req: express.Request, res: express.Response) => {
 
     const validToken: TokenData = tokenRes.data
 
-    const pageSize = config.taskPageSize || 20
-
-    const tasks = await prisma.tasks.findMany({
-        skip: data.page * pageSize,
-        take: pageSize,
+    const task = await prisma.tasks.findUnique({
         where: {
+            id: data.id
+        }
+    })
+
+    if (task === null) {
+        error(res, 400, "This id does not exist.")
+        return
+    }
+
+    if (task.user_id !== validToken.id) {
+        error(res, 403, "You are not the owner of this task.")
+        return
+    }
+
+    await prisma.tasks.delete({
+        where: {
+            id: data.id,
             user_id: validToken.id
         }
     })
 
-    const i = tasks.map((task) => {
-        return {
-            ...task,
-            completed: false,
-            completions: 1,
-        }
+    const updatedTasks = await prisma.tasks.findMany({
+        where: {
+            user_id: validToken.id
+        },
+        take: (data.page + 1) * config.taskPageSize
     })
 
-    success(res, i, "Successfully fetched tasks.", 200)
+    success(res, updatedTasks, "Successfully deleted task.", 200)
 }

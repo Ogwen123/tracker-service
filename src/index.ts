@@ -4,6 +4,8 @@ import bodyParser from "body-parser"
 
 import newTask from "./routes/task/new"
 import tasksIndex from "./routes/tasks/index"
+import deleteTask from "./routes/task/delete"
+import pinTask from "./routes/task/pin"
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -34,6 +36,14 @@ app.post("/api/task/new", (req, res) => {
 
 app.post("/api/tasks", (req, res) => {
     tasksIndex(req, res)
+})
+
+app.post("/api/task/delete", (req, res) => {
+    deleteTask(req, res)
+})
+
+app.post("/api/task/pin", (req, res) => {
+    pinTask(req, res)
 })
 
 app.listen(port, () => {

@@ -81,5 +81,6 @@ model tasks {
   week_of_repeat_period String?  @db.VarChar
   user_id               String?  @db.VarChar
   created_at            String?  @db.VarChar
+  pinned                Boolean  @default(false)
   users                 users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tasks_users_id_fk")
 }

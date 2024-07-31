@@ -5,17 +5,10 @@ import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
-import { v4 as uuidv4 } from "uuid"
 import config from "../../config.json"
 
 const SCHEMA = Joi.object({
-    name: Joi.string().required(),
-    repeatPeriod: Joi.string().allow("WEEK", "FORTNIGHT", "MONTH").required(),
-    dt: Joi.boolean().required(),
-    day: Joi.string().allow("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"),
-    hour: Joi.number(),
-    minute: Joi.number(),
-    week: Joi.string().allow("FIRST", "SECOND", "THIRD", "FOURTH"),
+    id: Joi.string().required(),
     page: Joi.number().required()
 })
 
@@ -46,36 +39,33 @@ export default async (req: express.Request, res: express.Response) => {
 
     const validToken: TokenData = tokenRes.data
 
-    // get a unique id
-    let id = ""
-    let unique = false
-    while (!unique) {
-        id = uuidv4()
-        unique = (await prisma.tasks.findMany({
-            where: {
-                id
-            }
-        })).length === 0
+    const task = await prisma.tasks.findUnique({
+        where: {
+            id: data.id
+        }
+    })
+
+    if (task === null) {
+        error(res, 400, "This id does not exist.")
+        return
     }
 
-    console.log(data.minute)
+    if (task.user_id !== validToken.id) {
+        error(res, 403, "You are not the owner of this task.")
+        return
+    }
 
-    await prisma.tasks.create({
+    await prisma.tasks.update({
+        where: {
+            id: data.id,
+            user_id: validToken.id
+        },
         data: {
-            id: id,
-            user_id: validToken.id,
-            name: data.name,
-            repeat_period: data.repeatPeriod,
-            date_time: data.dt,
-            day: data.day || null,
-            hour: data.hour !== undefined ? data.hour : null,
-            minute: data.minute !== undefined ? data.minute : null,
-            week_of_repeat_period: data.week || null,
-            created_at: iso()
+            pinned: (task.pinned === true ? false : true)
         }
     }).catch((e) => {
         console.log(e)
-        error(res, 400, "An error occured while creating the task.")
+        error(res, 500, "Something unexpected happened when pinning your task. Please try again.")
     })
 
     const updatedTasks = await prisma.tasks.findMany({
@@ -85,5 +75,9 @@ export default async (req: express.Request, res: express.Response) => {
         take: (data.page + 1) * config.taskPageSize
     })
 
-    success(res, updatedTasks, "Successfully created task.", 200)
+    if (updatedTasks === null) {
+        return error(res, 500, "Something unexpected happened when pinning your task. Please try again.")
+    }
+
+    success(res, updatedTasks, "Successfully " + (task.pinned === true ? "unpinned" : "pinned") + " task.", 200)
 }

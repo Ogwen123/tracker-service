@@ -50,7 +50,7 @@ export const success = (res: express.Response, data?: any, message?: string, cod
     res.send({
         success: true,
         code: res.statusCode,
-        message: message || status[res.statusCode.toString()],
+        message: message || status[res.statusCode.toString() as keyof typeof status],
         data
     })
 }
@@ -61,7 +61,7 @@ export const error = (res: express.Response, code: number, error?: string) => {
     res.send({
         success: false,
         code: res.statusCode,
-        message: status[res.statusCode.toString()] || "",
+        message: status[res.statusCode.toString() as keyof typeof status] || "",
         error: error || ""
     })
 }
