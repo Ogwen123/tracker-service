@@ -2,8 +2,10 @@ import express from "express"
 import dotenv from "dotenv"
 import bodyParser from "body-parser"
 
-import newTask from "./routes/task/new"
 import tasksIndex from "./routes/tasks/index"
+import tasksPinned from "./routes/tasks/pinned"
+
+import newTask from "./routes/task/new"
 import deleteTask from "./routes/task/delete"
 import pinTask from "./routes/task/pin"
 
@@ -36,6 +38,10 @@ app.post("/api/task/new", (req, res) => {
 
 app.post("/api/tasks", (req, res) => {
     tasksIndex(req, res)
+})
+
+app.get("/api/tasks/pinned", (req, res) => {
+    tasksPinned(req, res)
 })
 
 app.post("/api/task/delete", (req, res) => {
