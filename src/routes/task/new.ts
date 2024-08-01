@@ -46,6 +46,11 @@ export default async (req: express.Request, res: express.Response) => {
 
     const validToken: TokenData = tokenRes.data
 
+    if (data.name.includes("*")) {
+        error(res, 400, "Asterik is a reserved character and cannot be used in task names.")
+        return
+    }
+
     // get a unique id
     let id = ""
     let unique = false
@@ -57,8 +62,6 @@ export default async (req: express.Request, res: express.Response) => {
             }
         })).length === 0
     }
-
-    console.log(data.minute)
 
     await prisma.tasks.create({
         data: {

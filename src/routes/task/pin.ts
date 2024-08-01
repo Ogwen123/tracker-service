@@ -55,6 +55,18 @@ export default async (req: express.Request, res: express.Response) => {
         return
     }
 
+    const pinnedCount = await prisma.tasks.count({
+        where: {
+            user_id: validToken.id,
+            pinned: true
+        }
+    })
+
+    if (pinnedCount >= 6 && task.pinned === false) {
+        error(res, 400, "You can only have 6 pinned tasks.")
+        return
+    }
+
     await prisma.tasks.update({
         where: {
             id: data.id,
