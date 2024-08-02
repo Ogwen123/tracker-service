@@ -22,7 +22,7 @@ export default async (req: express.Request, res: express.Response) => {
 
     const data = valid.data
 
-    const token = req.get("Authorization")?.split(" ")[1]
+    const token = req.get("Authorization")?.split(" ")[1] // get the token from the bearer auth
 
     if (token === undefined) {
         error(res, 401, "Invalid token")
@@ -38,7 +38,43 @@ export default async (req: express.Request, res: express.Response) => {
 
     const validToken: TokenData = tokenRes.data
 
-    // searching logic goes here
+    const specialTagsFound = {
+        "pinned": false
+    }
 
-    success(res, null, "Successfully fetched tasks that match the query.", 200)
+    if (data.query.includes("*")) {
+        for (let i of Object.keys(specialTagsFound)) {
+            if (data.query.includes("*" + i)) {
+                specialTagsFound[i as keyof typeof specialTagsFound] = true
+            }
+        }
+    }
+
+    const filteredName: string[] = []
+
+    for (let i of data.query.split(" ")) {
+        for (let j of Object.keys(specialTagsFound)) {
+            if (i !== "*" + j) {
+                filteredName.push(i)
+            }
+        }
+    }
+
+    const query: { [key: string]: any } = {
+        name: {
+            contains: filteredName.join(" ")
+        },
+        user_id: validToken.id
+    }
+
+    // add special tags to the query
+    for (let i of Object.keys(specialTagsFound)) {
+        if (specialTagsFound[i as keyof typeof specialTagsFound] === true) query[i] = true
+    }
+
+    const results = await prisma.tasks.findMany({
+        where: query
+    })
+
+    success(res, results, "Successfully fetched tasks that match the query.", 200)
 }

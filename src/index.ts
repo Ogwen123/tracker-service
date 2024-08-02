@@ -4,6 +4,7 @@ import bodyParser from "body-parser"
 
 import tasksIndex from "./routes/tasks/index"
 import tasksPinned from "./routes/tasks/pinned"
+import tasksSearch from "./routes/tasks/search"
 
 import newTask from "./routes/task/new"
 import deleteTask from "./routes/task/delete"
@@ -42,6 +43,10 @@ app.post("/api/tasks", (req, res) => {
 
 app.get("/api/tasks/pinned", (req, res) => {
     tasksPinned(req, res)
+})
+
+app.post("/api/tasks/search", (req, res) => {
+    tasksSearch(req, res)
 })
 
 app.post("/api/task/delete", (req, res) => {
