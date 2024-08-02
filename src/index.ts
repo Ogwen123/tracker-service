@@ -2,10 +2,11 @@ import express from "express"
 import dotenv from "dotenv"
 import bodyParser from "body-parser"
 
-import tasksIndex from "./routes/tasks/index"
+import tasksIndex from "./routes/tasks"
 import tasksPinned from "./routes/tasks/pinned"
 import tasksSearch from "./routes/tasks/search"
 
+import taskIndex from "./routes/task"
 import newTask from "./routes/task/new"
 import deleteTask from "./routes/task/delete"
 import pinTask from "./routes/task/pin"
@@ -33,10 +34,6 @@ app.get("/", (req, res) => {
     res.send({ "message": "api is running" })
 })
 
-app.post("/api/task/new", (req, res) => {
-    newTask(req, res)
-})
-
 app.post("/api/tasks", (req, res) => {
     tasksIndex(req, res)
 })
@@ -47,6 +44,14 @@ app.get("/api/tasks/pinned", (req, res) => {
 
 app.post("/api/tasks/search", (req, res) => {
     tasksSearch(req, res)
+})
+
+app.post("/api/task", (req, res) => {
+    taskIndex(req, res)
+})
+
+app.post("/api/task/new", (req, res) => {
+    newTask(req, res)
 })
 
 app.post("/api/task/delete", (req, res) => {

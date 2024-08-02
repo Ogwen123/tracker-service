@@ -76,5 +76,13 @@ export default async (req: express.Request, res: express.Response) => {
         where: query
     })
 
-    success(res, results, "Successfully fetched tasks that match the query.", 200)
+    const i = results.map((task) => {
+        return {
+            ...task,
+            completed: false,
+            completions: 1,
+        }
+    })
+
+    success(res, i, "Successfully fetched tasks that match the query.", 200)
 }
