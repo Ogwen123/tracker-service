@@ -4,7 +4,7 @@ import config from "../../config.json"
 import { iso, validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
-import type { TokenData } from "../../global/types"
+import type { Task, TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
 
 const SCHEMA = Joi.object({
@@ -40,7 +40,7 @@ export default async (req: express.Request, res: express.Response) => {
 
     const pageSize = config.taskPageSize || 20
 
-    const tasks = await prisma.tasks.findMany({
+    const tasks = await prisma.tasks.findMany({ // add filtering to not take never repeats that have been completed
         skip: data.page * pageSize,
         take: pageSize,
         where: {
@@ -48,13 +48,15 @@ export default async (req: express.Request, res: express.Response) => {
         }
     })
 
-    const i = tasks.map((task) => {
-        return {
+    let filtered: any[] = []
+
+    tasks.forEach((task, _) => {
+        filtered.push({
             ...task,
             completed: false,
-            completions: 1,
-        }
+            completions: 1
+        })
     })
 
-    success(res, i, "Successfully fetched tasks.", 200)
+    success(res, filtered, "Successfully fetched tasks.", 200)
 }
