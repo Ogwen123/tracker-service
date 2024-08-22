@@ -1,5 +1,5 @@
 import Joi from "joi"
-import type { RepeatOptions, TaskCompletion } from "../global/types"
+import type { RawTask, RepeatOptions, Task, TaskCompletion } from "../global/types"
 
 export const now = (): number => {
     return Math.floor(Date.now() / 1000) // get unix seconds
@@ -26,24 +26,36 @@ export const validate = (schema: Joi.Schema, data: any) => {
     }
 }
 
-export const is_completed = (latest_completion: TaskCompletion, repeat_period: RepeatOptions) => {
-    if (repeat_period === "NEVER") {
+export const calc_threshold = (task: RawTask) => {
+    const EPOCH = 1724025600 // midnight on monday (19/8/24)
+
+    if (task.repeat_period === "WEEK") {
+        const SECONDS_IN_WEEK = 60 * 60 * 24 * 7
+
+        const time = now() - EPOCH
+        const time_into_week = time % SECONDS_IN_WEEK
+
+        const reset_point = time - time_into_week
+
+        return reset_point + EPOCH
+    } else {
+        return 0
+    }
+}
+
+export const is_completed = (task: RawTask) => {
+    if (!task.task_completions) return
+    if (task.repeat_period === "NEVER") {
         return true // function won't be run if there is not at least one completion so can just return true here
     } else {
         // calculate date of completion reset
-        let threshold = 0
-        const EPOCH = 1724025600 // midnight on monday (19/8/24)
+        let threshold = calc_threshold(task)
 
-        if (repeat_period === "WEEK") {
-            const SECONDS_IN_WEEK = 60 * 60 * 24 * 7
-
-            const time = now() - EPOCH
-            const time_into_week = time % SECONDS_IN_WEEK
-
-            const reset_point = time - time_into_week
-
-            threshold = reset_point + EPOCH
-            console.log(threshold)
+        console.log(threshold)
+        if (task.task_completions[0].completed_at > threshold) {
+            return true
+        } else {
+            return false
         }
     }
 }

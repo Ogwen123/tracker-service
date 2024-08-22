@@ -74,16 +74,16 @@ model tasks {
   id                    String             @id(map: "tasks_pk") @db.VarChar
   name                  String             @db.VarChar
   repeat_period         String             @db.VarChar
-  date_time             Boolean?
+  date_time             Boolean
   day                   String?            @db.VarChar
   hour                  Int?
   minute                Int?
   week_of_repeat_period String?            @db.VarChar
-  user_id               String?            @db.VarChar
-  created_at            String?            @db.VarChar
+  user_id               String             @db.VarChar
+  created_at            String             @db.VarChar
   pinned                Boolean            @default(false)
   task_completions      task_completions[]
-  users                 users?             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tasks_users_id_fk")
+  users                 users              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tasks_users_id_fk")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

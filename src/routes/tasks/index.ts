@@ -47,7 +47,11 @@ export default async (req: express.Request, res: express.Response) => {
             user_id: validToken.id
         },
         include: {
-            task_completions: true
+            task_completions: {
+                orderBy: {
+                    completed_at: "desc"// newest first
+                }
+            }
         }
     })
 
@@ -61,7 +65,7 @@ export default async (req: express.Request, res: express.Response) => {
                 ?
                 false
                 :
-                is_completed(task.task_completions[0], task.repeat_period as RepeatOptions),
+                is_completed(task),
             completions: task.task_completions.length
         })
     })

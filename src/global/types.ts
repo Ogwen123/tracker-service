@@ -14,6 +14,21 @@ export type RepeatOptions = "NEVER" | "WEEK" | "FORTNIGHT" | "MONTH"
 export type Day = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY"
 export type Week = "FIRST" | "SECOND" | "THIRD" | "FOURTH"
 
+export type RawTask = {
+    id: string,
+    name: string,
+    repeat_period: string,
+    date_time: boolean | null,
+    day: string | null,
+    hour: number | null,
+    minute: number | null,
+    week_of_repeat_period: string | null,
+    user_id: string,
+    pinned: boolean,
+    task_completions?: TaskCompletion[],
+    created_at: string
+}
+
 export type Task = {
     id: string,
     name: string,

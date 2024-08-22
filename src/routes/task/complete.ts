@@ -1,10 +1,11 @@
 import Joi from "joi"
 import express from "express"
-import { iso, validate } from "../../utils/utils"
+import { calc_threshold, is_completed, iso, now, validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
+import { v4 as uuidv4 } from "uuid"
 import config from "../../config.json"
 
 const SCHEMA = Joi.object({
@@ -42,6 +43,13 @@ export default async (req: express.Request, res: express.Response) => {
     const task = await prisma.tasks.findUnique({
         where: {
             id: data.id
+        },
+        include: {
+            task_completions: {
+                orderBy: {
+                    completed_at: "desc"// newest first
+                }
+            }
         }
     })
 
@@ -55,18 +63,43 @@ export default async (req: express.Request, res: express.Response) => {
         return
     }
 
-    await prisma.tasks.update({
-        where: {
-            id: data.id,
-            user_id: validToken.id
-        },
-        data: {
-            pinned: (task.pinned === true ? false : true)
+    if (is_completed(task)) {
+        await prisma.task_completions.deleteMany({
+            where: {
+                task_id: validToken.id,
+                completed_at: {
+                    gte: calc_threshold(task)
+                }
+            }
+        }).catch((e) => {
+            console.log(e)
+            error(res, 500, "Something unexpected happened when uncompleting your task. Please try again.")
+        })
+    } else {
+
+        // get a unique id
+        let id = ""
+        let unique = false
+        while (!unique) {
+            id = uuidv4()
+            unique = (await prisma.task_completions.findMany({
+                where: {
+                    id
+                }
+            })).length === 0
         }
-    }).catch((e) => {
-        console.log(e)
-        error(res, 500, "Something unexpected happened when pinning your task. Please try again.")
-    })
+
+        await prisma.task_completions.create({
+            data: {
+                id,
+                task_id: task.id,
+                completed_at: now()
+            }
+        }).catch((e) => {
+            console.log(e)
+            error(res, 500, "Something unexpected happened when completing your task. Please try again.")
+        })
+    }
 
     const updatedTasks = await prisma.tasks.findMany({
         where: {
