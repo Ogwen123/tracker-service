@@ -29,3 +29,9 @@ export type Task = {
     completions: number,
     created_at: string
 }
+
+export type TaskCompletion = {
+    id: string,
+    task_id: string,
+    completed_at: number
+}

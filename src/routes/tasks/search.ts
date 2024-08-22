@@ -1,10 +1,10 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { iso, validate } from "../../utils/utils"
+import { is_completed, iso, validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
-import type { TokenData } from "../../global/types"
+import type { RepeatOptions, TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
 
 const SCHEMA = Joi.object({
@@ -38,6 +38,7 @@ export default async (req: express.Request, res: express.Response) => {
 
     const validToken: TokenData = tokenRes.data
 
+    // handle special tags
     const specialTagsFound = {
         "pinned": false
     }
@@ -60,7 +61,7 @@ export default async (req: express.Request, res: express.Response) => {
         }
     }
 
-    const query: { [key: string]: any } = {
+    const query: { [key: string]: any } = { // base query
         name: {
             contains: filteredName.join(" ")
         },
@@ -73,14 +74,25 @@ export default async (req: express.Request, res: express.Response) => {
     }
 
     const results = await prisma.tasks.findMany({
-        where: query
+        where: query,
+        include: {
+            task_completions: {
+                orderBy: {
+                    completed_at: "desc"// newest first
+                }
+            }
+        }
     })
 
     const i = results.map((task) => {
         return {
             ...task,
-            completed: false,
-            completions: 1,
+            completed: task.task_completions.length === 0
+                ?
+                false
+                :
+                is_completed(task.task_completions[0], task.repeat_period as RepeatOptions),
+            completions: task.task_completions.length
         }
     })
 

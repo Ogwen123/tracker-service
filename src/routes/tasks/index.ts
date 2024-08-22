@@ -1,10 +1,10 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { iso, validate } from "../../utils/utils"
+import { is_completed, iso, validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
-import type { Task, TokenData } from "../../global/types"
+import type { RepeatOptions, Task, TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
 
 const SCHEMA = Joi.object({
@@ -40,21 +40,29 @@ export default async (req: express.Request, res: express.Response) => {
 
     const pageSize = config.taskPageSize || 20
 
-    const tasks = await prisma.tasks.findMany({ // add filtering to not take never repeats that have been completed
+    const tasks = await prisma.tasks.findMany({
         skip: data.page * pageSize,
         take: pageSize,
         where: {
             user_id: validToken.id
+        },
+        include: {
+            task_completions: true
         }
     })
 
     let filtered: any[] = []
 
     tasks.forEach((task, _) => {
+        if (task.repeat_period === "NEVER" && task.task_completions.length > 0) return false
         filtered.push({
             ...task,
-            completed: false,
-            completions: 1
+            completed: task.task_completions.length === 0
+                ?
+                false
+                :
+                is_completed(task.task_completions[0], task.repeat_period as RepeatOptions),
+            completions: task.task_completions.length
         })
     })
 
