@@ -84,6 +84,13 @@ export default async (req: express.Request, res: express.Response) => {
         where: {
             user_id: validToken.id
         },
+        include: {
+            task_completions: {
+                orderBy: {
+                    completed_at: "desc"// newest first
+                }
+            }
+        },
         take: (data.page + 1) * config.taskPageSize
     })
 

@@ -1,11 +1,12 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { is_completed, iso, validate } from "../../utils/utils"
+import { validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { RepeatOptions, TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
+import { addCompletionData, isCompleted } from "../../utils/tasks"
 
 const SCHEMA = Joi.object({
     query: Joi.string().required()
@@ -84,17 +85,7 @@ export default async (req: express.Request, res: express.Response) => {
         }
     })
 
-    const i = results.map((task) => {
-        return {
-            ...task,
-            completed: task.task_completions.length === 0
-                ?
-                false
-                :
-                is_completed(task),
-            completions: task.task_completions.length
-        }
-    })
+    const filtered = addCompletionData(results)
 
-    success(res, i, "Successfully fetched tasks that match the query.", 200)
+    success(res, filtered, "Successfully fetched tasks that match the query.", 200)
 }

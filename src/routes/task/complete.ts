@@ -1,6 +1,7 @@
 import Joi from "joi"
 import express from "express"
-import { calc_threshold, is_completed, iso, now, validate } from "../../utils/utils"
+import { addCompletionData, calcThreshold, isCompleted } from "../../utils/tasks"
+import { iso, now, validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { TokenData } from "../../global/types"
@@ -10,7 +11,8 @@ import config from "../../config.json"
 
 const SCHEMA = Joi.object({
     id: Joi.string().required(),
-    page: Joi.number().required()
+    page: Joi.number().required(),
+    return_updated_tasks: Joi.boolean().required()
 })
 
 export default async (req: express.Request, res: express.Response) => {
@@ -63,12 +65,13 @@ export default async (req: express.Request, res: express.Response) => {
         return
     }
 
-    if (is_completed(task)) {
+
+    if (isCompleted(task)) { // if it is already completed then uncomplete it by deleting the record of it being completed
         await prisma.task_completions.deleteMany({
             where: {
-                task_id: validToken.id,
+                task_id: data.id,
                 completed_at: {
-                    gte: calc_threshold(task)
+                    gte: calcThreshold(task)
                 }
             }
         }).catch((e) => {
@@ -101,16 +104,53 @@ export default async (req: express.Request, res: express.Response) => {
         })
     }
 
-    const updatedTasks = await prisma.tasks.findMany({
-        where: {
-            user_id: validToken.id
-        },
-        take: (data.page + 1) * config.taskPageSize
-    })
+    let returnData;
 
-    if (updatedTasks === null) {
+
+    // if the route is called from the task specific page and not the tasks page then only the task itself needs to be returned instead of multiple tasks
+    if (data.return_updated_tasks) {
+        const updatedTasks = await prisma.tasks.findMany({
+            where: {
+                user_id: validToken.id
+            },
+            include: {
+                task_completions: {
+                    orderBy: {
+                        completed_at: "desc"// newest first
+                    }
+                }
+            },
+            take: (data.page + 1) * config.taskPageSize
+        })
+
+        returnData = addCompletionData(updatedTasks)
+    } else {
+
+        const updatedTask = await prisma.tasks.findUnique({
+            where: {
+                id: data.id
+            },
+            include: {
+                task_completions: {
+                    orderBy: {
+                        completed_at: "desc"// newest first
+                    }
+                }
+            }
+        })
+
+        if (updatedTask !== null) {
+            returnData = {
+                ...updatedTask,
+                completed: isCompleted(task),
+                completions: (task.task_completions ? task.task_completions.length : 0)
+            }
+        }
+    }
+
+    if (returnData === null) {
         return error(res, 500, "Something unexpected happened when pinning your task. Please try again.")
     }
 
-    success(res, updatedTasks, "Successfully " + (task.pinned === true ? "unpinned" : "pinned") + " task.", 200)
+    success(res, returnData, "Successfully " + (task.pinned === true ? "unpinned" : "pinned") + " task.", 200)
 }

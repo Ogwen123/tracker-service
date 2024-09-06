@@ -6,6 +6,7 @@ import { verifyToken } from "../../utils/token"
 import type { TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
 import config from "../../config.json"
+import { addCompletionData } from "../../utils/tasks"
 
 const SCHEMA = Joi.object({
     id: Joi.string().required(),
@@ -66,8 +67,17 @@ export default async (req: express.Request, res: express.Response) => {
         where: {
             user_id: validToken.id
         },
+        include: {
+            task_completions: {
+                orderBy: {
+                    completed_at: "desc"// newest first
+                }
+            }
+        },
         take: (data.page + 1) * config.taskPageSize
     })
 
-    success(res, updatedTasks, "Successfully deleted task.", 200)
+    const filtered = addCompletionData(updatedTasks)
+
+    success(res, filtered, "Successfully deleted task.", 200)
 }

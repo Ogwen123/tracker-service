@@ -1,10 +1,11 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { is_completed, iso, validate } from "../../utils/utils"
+import { addCompletionData, isCompleted } from "../../utils/tasks"
+import { validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
-import type { RepeatOptions, Task, TokenData } from "../../global/types"
+import type { TokenData } from "../../global/types"
 import { prisma } from "../../utils/db"
 
 const SCHEMA = Joi.object({
@@ -55,20 +56,7 @@ export default async (req: express.Request, res: express.Response) => {
         }
     })
 
-    let filtered: any[] = []
-
-    tasks.forEach((task, _) => {
-        if (task.repeat_period === "NEVER" && task.task_completions.length > 0) return false
-        filtered.push({
-            ...task,
-            completed: task.task_completions.length === 0
-                ?
-                false
-                :
-                is_completed(task),
-            completions: task.task_completions.length
-        })
-    })
+    let filtered: any[] = addCompletionData(tasks)
 
     success(res, filtered, "Successfully fetched tasks.", 200)
 }

@@ -1,7 +1,8 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { is_completed, iso, validate } from "../../utils/utils"
+import { isCompleted } from "../../utils/tasks"
+import { validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { RepeatOptions, TokenData } from "../../global/types"
@@ -59,11 +60,7 @@ export default async (req: express.Request, res: express.Response) => {
 
     const i = {
         ...task,
-        completed: task.task_completions.length === 0
-            ?
-            false
-            :
-            is_completed(task),
+        completed: isCompleted(task),
         completions: task.task_completions.length
     }
 

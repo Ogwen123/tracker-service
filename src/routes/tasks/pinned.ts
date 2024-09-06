@@ -1,7 +1,7 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { is_completed, iso, validate } from "../../utils/utils"
+import { addCompletionData, isCompleted } from "../../utils/tasks"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
 import type { RepeatOptions, TokenData } from "../../global/types"
@@ -25,7 +25,7 @@ export default async (req: express.Request, res: express.Response) => {
 
     const validToken: TokenData = tokenRes.data
 
-    const results = await prisma.tasks.findMany({
+    const tasks = await prisma.tasks.findMany({
         where: {
             user_id: validToken.id,
             pinned: true
@@ -39,17 +39,7 @@ export default async (req: express.Request, res: express.Response) => {
         }
     })
 
-    const i = results.map((task) => {
-        return {
-            ...task,
-            completed: task.task_completions.length === 0
-                ?
-                false
-                :
-                is_completed(task),
-            completions: task.task_completions.length
-        }
-    })
+    const filtered = addCompletionData(tasks)
 
-    success(res, i, "Successfully fetched pinned tasks.", 200)
+    success(res, filtered, "Successfully fetched pinned tasks.", 200)
 }

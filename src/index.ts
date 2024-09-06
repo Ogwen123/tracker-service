@@ -10,6 +10,7 @@ import taskIndex from "./routes/task"
 import newTask from "./routes/task/new"
 import deleteTask from "./routes/task/delete"
 import pinTask from "./routes/task/pin"
+import completeTask from "./routes/task/complete"
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -60,6 +61,10 @@ app.post("/api/task/delete", (req, res) => {
 
 app.post("/api/task/pin", (req, res) => {
     pinTask(req, res)
+})
+
+app.post("/api/task/complete", (req, res) => {
+    completeTask(req, res)
 })
 
 app.listen(port, () => {
