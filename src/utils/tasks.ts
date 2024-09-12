@@ -1,9 +1,9 @@
 import type { RawTask, RepeatOptions, Task } from "../global/types"
-import { now } from "./utils"
+import { iso, now } from "./utils"
 
 export const calcThreshold = (task: RawTask) => {
-    // everything is timed off the start of the week and the unix epoch is on a thursday so required a new one that is a monday
-    const EPOCH = 1720396800 // midnight on monday (8/7/24)
+    // everything is timed off the start of the week and month so this epoch is a monday that is the first of a month
+    const EPOCH = 1719792000 // midnight on monday (1/7/24)
     const SECONDS_IN_WEEK = 60 * 60 * 24 * 7
     const SECONDS_IN_FORTNIGHT = 60 * 60 * 24 * 7 * 2
 
@@ -27,6 +27,16 @@ export const calcThreshold = (task: RawTask) => {
 
         return resetPoint + weekOfCreationEpoch
 
+    } else if (task.repeat_period === "MONTH") {
+        // calculate timestamp for the midnight on the monday of the week the task was created on
+        const currentISO = iso() // 2024-09-12T18:31:23.571Z
+
+        const startOfMonthISO = currentISO.split("-").slice(0, 2).join("-") + "-01T00:00:00.000Z"
+
+        const startOfMonthTimestamp = Math.round(new Date(startOfMonthISO).getTime() / 1000) // convert to seconds
+
+        return startOfMonthTimestamp
+
     } else {
         return 0
     }
@@ -40,7 +50,7 @@ export const isCompleted = (task: RawTask) => {
         // calculate date of completion reset
         let threshold = calcThreshold(task)
 
-        console.log(task.name + ": " + threshold)
+        //console.log(task.name + ": " + threshold)
         if (task.task_completions[0].completed_at > threshold) {
             return true
         } else {
