@@ -42,6 +42,44 @@ export const calcThreshold = (task: RawTask) => {
     }
 }
 
+export const calcEndThreshold = (task: RawTask) => {
+    const SECONDS_IN_WEEK = 60 * 60 * 24 * 7
+    const SECONDS_IN_FORTNIGHT = 60 * 60 * 24 * 7 * 2
+
+    if (task.repeat_period === "WEEK") {
+        const startThreshold = calcThreshold(task)
+        return startThreshold + SECONDS_IN_WEEK
+
+    } else if (task.repeat_period === "FORTNIGHT") {
+        const startThreshold = calcThreshold(task)
+        return startThreshold + SECONDS_IN_FORTNIGHT
+
+    } else if (task.repeat_period === "MONTH") {
+        // calculate timestamp for the midnight on the monday of the week the task was created on
+        const currentISO = iso() // 2024-09-12T18:31:23.571Z
+
+        const splitISO = currentISO.split("-")
+        let year = Number.parseInt(splitISO[0])
+        let month = Number.parseInt(splitISO[1])
+
+        if (month === 12) {
+            year++
+            month = 1
+        } else {
+            month++
+        }
+
+        const startOfNextMonthISO = year.toString() + "-" + month.toString() + "-01T00:00:00.000Z"
+
+        const startOfNextMonthTimestamp = Math.round(new Date(startOfNextMonthISO).getTime() / 1000) // convert to seconds
+
+        return startOfNextMonthTimestamp
+
+    } else {
+        return 0
+    }
+}
+
 export const isCompleted = (task: RawTask) => {
     if (!task.task_completions || task.task_completions.length === 0) return false
     if (task.repeat_period === "NEVER") {

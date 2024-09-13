@@ -12,7 +12,7 @@ import config from "../../config.json"
 const SCHEMA = Joi.object({
     id: Joi.string().required(),
     page: Joi.number().required(),
-    return_updated_tasks: Joi.boolean().required()
+    return_updated_tasks: Joi.string().allow("ALL", "PINNED", "NONE").required()
 })
 
 export default async (req: express.Request, res: express.Response) => {
@@ -108,11 +108,17 @@ export default async (req: express.Request, res: express.Response) => {
 
 
     // if the route is called from the task specific page and not the tasks page then only the task itself needs to be returned instead of multiple tasks
-    if (data.return_updated_tasks) {
+    if (data.return_updated_tasks === "ALL" || data.return_updated_tasks === "PINNED") {
+        const query: { user_id: string, pinned?: boolean } = {
+            user_id: validToken.id
+        }
+
+        if (data.return_updated_tasks === "PINNED") {
+            query.pinned = true
+        }
+
         const updatedTasks = await prisma.tasks.findMany({
-            where: {
-                user_id: validToken.id
-            },
+            where: query,
             include: {
                 task_completions: {
                     orderBy: {

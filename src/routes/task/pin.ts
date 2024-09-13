@@ -9,7 +9,7 @@ import config from "../../config.json"
 
 const SCHEMA = Joi.object({
     id: Joi.string().required(),
-    page: Joi.number().required()
+    page: Joi.number().required() // set page to -1 to not return any updated tasks
 })
 
 export default async (req: express.Request, res: express.Response) => {

@@ -1,7 +1,7 @@
 import Joi from "joi"
 import express from "express"
 import config from "../../config.json"
-import { isCompleted } from "../../utils/tasks"
+import { calcEndThreshold, isCompleted } from "../../utils/tasks"
 import { validate } from "../../utils/utils"
 import { error, success } from "../../utils/api"
 import { verifyToken } from "../../utils/token"
@@ -61,7 +61,8 @@ export default async (req: express.Request, res: express.Response) => {
     const i = {
         ...task,
         completed: isCompleted(task),
-        completions: task.task_completions.length
+        completions: task.task_completions.length,
+        threshold: calcEndThreshold(task)
     }
 
     success(res, i, "Successfully fetched tasks.", 200)
