@@ -12,6 +12,8 @@ import deleteTask from "./routes/task/delete"
 import pinTask from "./routes/task/pin"
 import completeTask from "./routes/task/complete"
 import editTask from "./routes/task/edit"
+import { prisma } from "./utils/db"
+import { error } from "./utils/api"
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -20,6 +22,7 @@ dotenv.config()
 
 const app = express()
 const port = 3004
+const TRACKER_SERVICE_ID = "daa8bbca-dfe0-4886-919f-5514641bc110"
 
 //app.use(express.json())
 app.use(bodyParser.json())
@@ -32,8 +35,47 @@ app.use('/*', (req, res, next) => {
     next();
 });
 
-app.get("/", (req, res) => {
-    res.send({ "message": "api is running" })
+app.use("/api/*", async (req, res, next) => {
+    let enabled
+    const enabledRes = (await prisma.services.findUnique({
+        where: {
+            id: TRACKER_SERVICE_ID
+        },
+        select: {
+            enabled: true
+        }
+    }))
+
+
+    if (enabledRes === undefined || enabledRes === null) {
+        enabled = true
+    } else {
+        enabled = enabledRes.enabled
+    }
+
+    //console.log(enabledRes)
+
+    //console.log(enabled)
+    if (enabled) {
+        next();
+    } else {
+        error(res, 403, "This service is disabled.")
+    }
+})
+
+app.get('/', async (req, res) => {
+    const enabled = (await prisma.services.findUnique({
+        where: {
+            id: TRACKER_SERVICE_ID
+        },
+        select: {
+            enabled: true
+        }
+    }))?.enabled
+
+    res.send({
+        "message": (enabled ? "API is running." : "API is disabled.")
+    })
 })
 
 app.post("/api/tasks", (req, res) => {
