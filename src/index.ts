@@ -1,6 +1,8 @@
 import express from "express"
 import dotenv from "dotenv"
 import bodyParser from "body-parser"
+import { prisma } from "./utils/db"
+import { error } from "./utils/api"
 
 import tasksIndex from "./routes/tasks"
 import tasksPinned from "./routes/tasks/pinned"
@@ -12,8 +14,16 @@ import deleteTask from "./routes/task/delete"
 import pinTask from "./routes/task/pin"
 import completeTask from "./routes/task/complete"
 import editTask from "./routes/task/edit"
-import { prisma } from "./utils/db"
-import { error } from "./utils/api"
+
+import newLink from "./routes/link/new"
+
+import allLinks from "./routes/links/all"
+
+import newLinkType from "./routes/link/type/new"
+import deleteLinkType from "./routes/link/type/delete"
+
+import newClassType from "./routes/link/class/new"
+import deleteClassType from "./routes/link/class/delete"
 
 //@ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -113,6 +123,31 @@ app.post("/api/task/complete", (req, res) => {
 app.post("/api/task/edit", (req, res) => {
     editTask(req, res)
 })
+
+app.post("/api/link", (req, res) => {
+    newLink(req, res)
+})
+
+app.get("/api/links/all", (req, res) => {
+    allLinks(req, res)
+})
+
+app.post("/api/link/type", (req, res) => {
+    newLinkType(req, res)
+})
+
+app.delete("/api/link/type", (req, res) => {
+    deleteLinkType(req, res)
+})
+
+app.post("/api/link/class", (req, res) => {
+    newClassType(req, res)
+})
+
+app.delete("/api/link/class", (req, res) => {
+    deleteClassType(req, res)
+})
+
 
 app.listen(port, () => {
     console.log(`tracker service loaded, ${port}`)
