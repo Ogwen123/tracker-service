@@ -151,7 +151,7 @@ model link_types {
   id      String  @id(map: "link_types_pk") @db.VarChar
   user_id String  @db.VarChar
   name    String  @db.VarChar
-  colour  String  @db.VarChar
+  colour  Int
   users   users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "link_types_users_id_fk")
   links   links[]
 }
@@ -186,7 +186,7 @@ model link_classes {
   id      String  @id(map: "link_classes_pk") @db.VarChar
   user_id String? @db.VarChar
   name    String? @db.VarChar
-  colour  String? @db.VarChar
+  colour  Int?
   users   users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "link_classes_users_id_fk")
   links   links[]
 }
