@@ -24,6 +24,11 @@ import deleteLinkType from "./routes/link/type/delete";
 
 import newClassType from "./routes/link/class/new";
 import deleteClassType from "./routes/link/class/delete";
+
+import updateClasses from "./routes/links/classes/update";
+
+import updateTypes from "./routes/links/types/update";
+
 import { verifyToken } from "./utils/token";
 import type { TokenData } from "./global/types";
 
@@ -51,7 +56,10 @@ app.use(bodyParser.json());
 app.use((req, res, next) => {
     // CORS middleware
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Content-Type,Authorization,User",
+    );
     res.header(
         "Access-Control-Allow-Methods",
         "GET,HEAD,POST,PATCH,DELETE,OPTIONS",
@@ -61,22 +69,26 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/", async (req, res, next) => {
-    const token = req.get("Authorization")?.split(" ")[1];
+    if (req.method === "OPTIONS") {
+        next();
+    } else {
+        const token = req.get("Authorization")?.split(" ")[1];
 
-    if (token === undefined) {
-        error(res, 401, "Invalid token");
-        return;
+        if (token === undefined) {
+            error(res, 401, "Invalid token");
+            return;
+        }
+
+        const tokenRes = await verifyToken(token);
+
+        if (tokenRes === false) {
+            error(res, 401, "This is not a valid token.");
+            return;
+        }
+
+        req.user = tokenRes.data;
+        next();
     }
-
-    const tokenRes = await verifyToken(token);
-
-    if (tokenRes === false) {
-        error(res, 401, "This is not a valid token.");
-        return;
-    }
-
-    req.user = tokenRes.data;
-    next();
 });
 
 app.use("/", async (req, res, next) => {
@@ -110,65 +122,30 @@ app.get("/", async (req, res) => {
     });
 });
 
-app.post("/api/tasks", (req, res) => {
-    tasksIndex(req, res);
-});
+app.post("/api/tasks", tasksIndex);
+app.get("/api/tasks/pinned", tasksPinned);
+app.post("/api/tasks/search", tasksSearch);
 
-app.get("/api/tasks/pinned", (req, res) => {
-    tasksPinned(req, res);
-});
+app.post("/api/task", taskIndex);
+app.post("/api/task/new", newTask);
+app.post("/api/task/delete", deleteTask);
+app.post("/api/task/pin", pinTask);
+app.post("/api/task/complete", completeTask);
+app.post("/api/task/edit", editTask);
 
-app.post("/api/tasks/search", (req, res) => {
-    tasksSearch(req, res);
-});
+app.post("/api/link", newLink);
 
-app.post("/api/task", (req, res) => {
-    taskIndex(req, res);
-});
+app.get("/api/links/all", allLinks);
 
-app.post("/api/task/new", (req, res) => {
-    newTask(req, res);
-});
+app.post("/api/link/type", newLinkType);
+app.delete("/api/link/type", deleteLinkType);
 
-app.post("/api/task/delete", (req, res) => {
-    deleteTask(req, res);
-});
+app.post("/api/link/class", newClassType);
+app.delete("/api/link/class", deleteClassType);
 
-app.post("/api/task/pin", (req, res) => {
-    pinTask(req, res);
-});
+app.post("/api/links/classes", updateClasses);
 
-app.post("/api/task/complete", (req, res) => {
-    completeTask(req, res);
-});
-
-app.post("/api/task/edit", (req, res) => {
-    editTask(req, res);
-});
-
-app.post("/api/link", (req, res) => {
-    newLink(req, res);
-});
-
-app.get("/api/links/all", (req, res) => {
-    allLinks(req, res);
-});
-
-app.post("/api/link/type", (req, res) => {
-    newLinkType(req, res);
-});
-
-app.delete("/api/link/type", (req, res) => {
-    deleteLinkType(req, res);
-});
-
-app.post("/api/link/class", (req, res) => {
-    newClassType(req, res);
-});
-
-app.delete("/api/link/class", (req, res) => {
-    deleteClassType(req, res);
-});
+app.post("/api/links/types", updateTypes);
 
 app.listen(port, () => {
     console.log(`tracker service loaded, ${port}`);
